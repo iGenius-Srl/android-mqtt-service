@@ -3,6 +3,8 @@ package net.igenius.mqttservice;
 import android.content.Context;
 import android.content.Intent;
 
+import com.google.gson.Gson;
+
 import java.util.UUID;
 
 import static net.igenius.mqttservice.MQTTService.NAMESPACE;
@@ -75,6 +77,15 @@ public class MQTTServiceCommand {
         return publish(context, topic, payload, 0);
     }
 
+    public static String publish(final Context context, final String topic, final Object payload,
+                                 final int qos) {
+        return publish(context, topic, new Gson().toJson(payload), qos);
+    }
+
+    public static String publish(final Context context, final String topic, final Object payload) {
+        return publish(context, topic, payload, 0);
+    }
+
     protected static String getBroadcastAction() {
         return NAMESPACE + BROADCAST_ACTION;
     }
@@ -87,7 +98,7 @@ public class MQTTServiceCommand {
         intent.setAction(action);
 
         if (params != null && params.length > 0) {
-            for (int i = 0; i < params.length - 2; i++) {
+            for (int i = 0; i <= params.length - 2; i += 2) {
                 intent.putExtra(params[i], params[i + 1]);
             }
         }

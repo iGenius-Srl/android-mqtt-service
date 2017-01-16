@@ -3,6 +3,7 @@ package net.igenius.mqttservice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_EXCEPTION;
@@ -48,11 +49,39 @@ public abstract class MQTTServiceReceiver extends BroadcastReceiver {
                              intent.getStringExtra(PARAM_PAYLOAD));
 
         } else if (BROADCAST_SUBSCRIPTION_SUCCESS.equals(broadcastType)) {
-            onSubscriptionSuccessful(context, requestId);
+            onSubscriptionSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPIC));
         }
     }
 
-    public abstract void onSubscriptionSuccessful(Context context, String requestId);
+    /**
+     * Register this upload receiver.<br>
+     * If you use this receiver in an {@link android.app.Activity}, you have to call this method inside
+     * {@link android.app.Activity#onResume()}, after {@code super.onResume();}.<br>
+     * If you use it in a {@link android.app.Service}, you have to
+     * call this method inside {@link android.app.Service#onCreate()}, after {@code super.onCreate();}.
+     *
+     * @param context context in which to register this receiver
+     */
+    public void register(final Context context) {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(getBroadcastAction());
+        context.registerReceiver(this, intentFilter);
+    }
+
+    /**
+     * Unregister this upload receiver.<br>
+     * If you use this receiver in an {@link android.app.Activity}, you have to call this method inside
+     * {@link android.app.Activity#onPause()}, after {@code super.onPause();}.<br>
+     * If you use it in a {@link android.app.Service}, you have to
+     * call this method inside {@link android.app.Service#onDestroy()}.
+     *
+     * @param context context in which to unregister this receiver
+     */
+    public void unregister(final Context context) {
+        context.unregisterReceiver(this);
+    }
+
+    public abstract void onSubscriptionSuccessful(Context context, String requestId, String topic);
 
     public abstract void onMessageArrived(Context context, String topic, String payload);
 

@@ -1,7 +1,5 @@
 package net.igenius.mqttservice;
 
-import net.gotev.baselibrary.BuildConfig;
-
 /**
  * MQTT Service library logger.
  * You can provide your own logger delegate implementation, to be able to log in a different way.

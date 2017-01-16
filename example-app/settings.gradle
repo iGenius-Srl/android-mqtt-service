@@ -1,0 +1,3 @@
+include ':app'
+include ':mqttservice'
+project(':mqttservice').projectDir = file('../mqttservice')

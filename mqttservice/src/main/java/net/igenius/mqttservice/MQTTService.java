@@ -6,6 +6,7 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
@@ -53,7 +54,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         intent.putExtra(PARAM_REQUEST_ID, requestId);
 
         if (params != null && params.length > 0) {
-            for (int i = 0; i < params.length - 2; i++) {
+            for (int i = 0; i <= params.length - 2; i += 2) {
                 intent.putExtra(params[i], params[i + 1]);
             }
         }
@@ -114,6 +115,9 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                            final String username,
                            final String password) {
 
+        MQTTServiceLogger.debug(getClass().getSimpleName(), requestId + " Connect to "
+                + brokerUrl + " with user: " + username + " and password: " + password);
+
         try {
             if (mClient == null) {
                 MQTTServiceLogger.debug("onConnect", "Creating new MQTT connection");
@@ -130,17 +134,22 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                 connectOptions.setAutomaticReconnect(true);
 
                 mClient.connect(connectOptions);
+                MQTTServiceLogger.debug("onConnect", "Connected");
                 broadcast(BROADCAST_CONNECTION_SUCCESS, requestId);
 
             } else {
-                MQTTServiceLogger.debug("onConnect", "Reconnecting MQTT");
+                if (mClient.isConnected()) {
+                    MQTTServiceLogger.debug("onConnect", "Client already connected, nothing to do");
+                } else {
+                    MQTTServiceLogger.debug("onConnect", "Reconnecting MQTT");
 
-                mClient.reconnect();
-                broadcast(BROADCAST_CONNECTION_SUCCESS, requestId);
+                    mClient.reconnect();
+                    broadcast(BROADCAST_CONNECTION_SUCCESS, requestId);
+                }
             }
 
-        } catch (Exception exc) {
-            broadcastException(requestId, exc);
+        } catch (MqttException exc) {
+            broadcastException(requestId, new MqttException(exc));
         }
     }
 
@@ -159,7 +168,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             mClient.disconnect();
 
         } catch (Exception e) {
-            broadcastException(requestId, e);
+            broadcastException(requestId, new MqttException(e));
 
             try {
                 mClient.disconnectForcibly();
@@ -179,10 +188,12 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         try {
             MQTTServiceLogger.debug("onSubscribe", "Subscribing to topic: " + topic + " with QoS " + qos);
             mClient.subscribe(topic, qos);
-            broadcast(BROADCAST_SUBSCRIPTION_SUCCESS, requestId);
+            broadcast(BROADCAST_SUBSCRIPTION_SUCCESS, requestId,
+                    PARAM_TOPIC, topic
+            );
 
         } catch (Exception e) {
-            broadcastException(requestId, e);
+            broadcastException(requestId, new MqttException(e));
         }
     }
 
@@ -198,13 +209,13 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             mClient.publish(topic, message);
 
         } catch (Exception exc) {
-            broadcastException(requestId, exc);
+            broadcastException(requestId, new MqttException(exc));
         }
     }
 
     @Override
     public void connectionLost(Throwable cause) {
-        broadcastException(UUID.randomUUID().toString(), (Exception) cause);
+        broadcastException(UUID.randomUUID().toString(), new Exception(cause));
     }
 
     @Override
