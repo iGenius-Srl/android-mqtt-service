@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 
 import java.util.UUID;
 
+import static android.R.attr.action;
 import static net.igenius.mqttservice.MQTTService.NAMESPACE;
 
 /**
@@ -27,6 +28,7 @@ public class MQTTServiceCommand {
     static final String PARAM_USERNAME = "username";
     static final String PARAM_PASSWORD = "password";
     static final String PARAM_TOPIC = "topic";
+    static final String PARAM_TOPICS = "topics";
     static final String PARAM_PAYLOAD = "payload";
     static final String PARAM_QOS = "qos";
     static final String PARAM_REQUEST_ID = "reqId";
@@ -37,6 +39,7 @@ public class MQTTServiceCommand {
     static final String BROADCAST_CONNECTION_SUCCESS = "connectionSuccess";
     static final String BROADCAST_MESSAGE_ARRIVED = "messageArrived";
     static final String BROADCAST_SUBSCRIPTION_SUCCESS = "subscriptionSuccess";
+    static final String BROADCAST_PUBLISH_SUCCESS = "publishSuccess";
 
     public static String connect(final Context context, final String brokerUrl,
                                  final String clientId, final String username,
@@ -53,15 +56,23 @@ public class MQTTServiceCommand {
         return startService(context, ACTION_DISCONNECT);
     }
 
-    public static String subscribe(final Context context, final String topic, final int qos) {
-        return startService(context, ACTION_SUBSCRIBE,
-                PARAM_TOPIC, topic,
-                PARAM_QOS, Integer.toString(qos)
-        );
+    public static String subscribe(final Context context, final int qos, final String... topics) {
+        Intent intent = new Intent(context, MQTTService.class);
+        intent.setAction(ACTION_SUBSCRIBE);
+
+        intent.putExtra(PARAM_QOS, Integer.toString(qos));
+        intent.putExtra(PARAM_TOPICS, topics);
+
+        String uuid = UUID.randomUUID().toString();
+        intent.putExtra(PARAM_REQUEST_ID, action + "/" + uuid);
+
+        context.startService(intent);
+
+        return uuid;
     }
 
-    public static String subscribe(final Context context, final String topic) {
-        return subscribe(context, topic, 0);
+    public static String subscribe(final Context context, final String... topics) {
+        return subscribe(context, 0, topics);
     }
 
     public static String publish(final Context context, final String topic, final String payload,

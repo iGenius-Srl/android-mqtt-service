@@ -19,6 +19,7 @@ import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_SUBSCRIBE;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_MESSAGE_ARRIVED;
+import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_PUBLISH_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROADCAST_TYPE;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROKER_URL;
@@ -29,6 +30,7 @@ import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_PAYLOAD;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_QOS;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_REQUEST_ID;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_TOPIC;
+import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_TOPICS;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_USERNAME;
 import static net.igenius.mqttservice.MQTTServiceCommand.getBroadcastAction;
 
@@ -102,7 +104,8 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             onDisconnect(requestId);
 
         } else if (ACTION_SUBSCRIBE.equals(action)) {
-            onSubscribe(requestId, getParameter(PARAM_TOPIC), Integer.parseInt(getParameter(PARAM_QOS)));
+            onSubscribe(requestId, Integer.parseInt(getParameter(PARAM_QOS)),
+                        mIntent.getStringArrayExtra(PARAM_TOPICS));
 
         } else if (ACTION_PUBLISH.equals(action)) {
             onPublish(requestId, getParameter(PARAM_TOPIC), getParameter(PARAM_PAYLOAD));
@@ -179,18 +182,27 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         }
     }
 
-    private void onSubscribe(final String requestId, final String topic, final int qos) {
+    private void onSubscribe(final String requestId, final int qos, final String[] topics) {
+        if (topics == null || topics.length == 0) {
+            broadcastException(requestId, new Exception("No topics passed to subscribe!"));
+            return;
+        }
+
         if (!clientIsConnected()) {
-            broadcastException(requestId, new Exception("Can't subscribe to topic: " + topic + ", client not connected!"));
+            broadcastException(requestId, new Exception("Can't subscribe to topics, client not connected!"));
             return;
         }
 
         try {
-            MQTTServiceLogger.debug("onSubscribe", "Subscribing to topic: " + topic + " with QoS " + qos);
-            mClient.subscribe(topic, qos);
-            broadcast(BROADCAST_SUBSCRIPTION_SUCCESS, requestId,
-                    PARAM_TOPIC, topic
-            );
+            for (String topic : topics) {
+                MQTTServiceLogger.debug("onSubscribe", "Subscribing to topic: " + topic + " with QoS " + qos);
+                mClient.subscribe(topic, qos);
+                MQTTServiceLogger.debug("onSubscribe", "Successfully subscribed to topic: " + topic);
+
+                broadcast(BROADCAST_SUBSCRIPTION_SUCCESS, requestId,
+                        PARAM_TOPICS, topic
+                );
+            }
 
         } catch (Exception e) {
             broadcastException(requestId, new MqttException(e));
@@ -204,9 +216,15 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         }
 
         try {
+            MQTTServiceLogger.debug("onPublish", "Publishing to topic: " + topic + ", payload: " + payload);
             MqttMessage message = new MqttMessage(payload.getBytes("UTF-8"));
             message.setQos(0);
             mClient.publish(topic, message);
+            MQTTServiceLogger.debug("onPublish", "Successfully published to topic: " + topic + ", payload: " + payload);
+
+            broadcast(BROADCAST_PUBLISH_SUCCESS, requestId,
+                    PARAM_TOPIC, topic
+            );
 
         } catch (Exception exc) {
             broadcastException(requestId, new MqttException(exc));

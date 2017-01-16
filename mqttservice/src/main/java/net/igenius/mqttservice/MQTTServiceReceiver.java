@@ -8,12 +8,14 @@ import android.content.IntentFilter;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_MESSAGE_ARRIVED;
+import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_PUBLISH_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROADCAST_TYPE;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_PAYLOAD;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_REQUEST_ID;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_TOPIC;
+import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_TOPICS;
 import static net.igenius.mqttservice.MQTTServiceCommand.getBroadcastAction;
 
 /**
@@ -49,7 +51,10 @@ public abstract class MQTTServiceReceiver extends BroadcastReceiver {
                              intent.getStringExtra(PARAM_PAYLOAD));
 
         } else if (BROADCAST_SUBSCRIPTION_SUCCESS.equals(broadcastType)) {
-            onSubscriptionSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPIC));
+            onSubscriptionSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPICS));
+
+        } else if (BROADCAST_PUBLISH_SUCCESS.equals(broadcastType)) {
+            onPublishSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPIC));
         }
     }
 
@@ -80,6 +85,8 @@ public abstract class MQTTServiceReceiver extends BroadcastReceiver {
     public void unregister(final Context context) {
         context.unregisterReceiver(this);
     }
+
+    public abstract void onPublishSuccessful(Context context, String requestId, String topic);
 
     public abstract void onSubscriptionSuccessful(Context context, String requestId, String topic);
 
