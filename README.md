@@ -1,4 +1,5 @@
-# Android MQTT Service
+# Android MQTT Service [![Build Status](https://travis-ci.org/iGenius-Srl/android-mqtt-service.svg?branch=master)](https://travis-ci.org/iGenius-Srl/android-mqtt-service) [![Download](https://api.bintray.com/packages/igenius-code/maven/android-mqtt-service/images/download.svg) ](https://bintray.com/igenius-code/maven/android-mqtt-service/_latestVersion)
+
 A tiny wrapper around [Eclipse Paho MQTT Java library](https://github.com/eclipse/paho.mqtt.java), to have a lightweight background Android service, which handles all the following operations in a background thread:
 
 * connect to broker
