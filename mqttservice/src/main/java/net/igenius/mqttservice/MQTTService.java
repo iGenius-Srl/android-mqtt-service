@@ -40,6 +40,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
     private Intent mIntent;
     private MqttClient mClient;
+    private boolean mShutdown = false;
 
     private String getParameter(String key) {
         return mIntent.getStringExtra(key);
@@ -83,9 +84,16 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                 MQTTServiceLogger.error("MQTTService onStartCommand",
                                         "null or empty Intent passed, ignoring it!");
             } else {
+                mShutdown = false;
                 mIntent = intent;
                 post(this);
             }
+        }
+
+        if (mShutdown) {
+            MQTTServiceLogger.debug(getClass().getSimpleName(), "Shutting down service");
+            stopSelf();
+            return START_NOT_STICKY;
         }
 
         return START_STICKY;
@@ -179,6 +187,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
         } finally {
             mClient = null;
+            mShutdown = true;
         }
     }
 
