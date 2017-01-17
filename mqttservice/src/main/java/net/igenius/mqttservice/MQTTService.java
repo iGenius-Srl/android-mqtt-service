@@ -168,7 +168,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
             return true;
 
-        } catch (MqttException exc) {
+        } catch (Exception exc) {
             broadcastException(requestId, new MqttException(exc));
             return false;
         }

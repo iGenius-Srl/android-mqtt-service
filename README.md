@@ -10,7 +10,7 @@ A tiny wrapper around [Eclipse Paho MQTT Java library](https://github.com/eclips
 
 ## Setup
 ```groovy
-compile 'net.igenius:mqttservice:1.2'
+compile 'net.igenius:mqttservice:1.2.1'
 ```
 
 Before using the library, you have to initialize it. The ideal place to do that is in your [Application subclass](http://developer.android.com/reference/android/app/Application.html):
