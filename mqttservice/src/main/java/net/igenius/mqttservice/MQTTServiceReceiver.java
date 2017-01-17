@@ -1,9 +1,9 @@
 package net.igenius.mqttservice;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.support.v4.content.WakefulBroadcastReceiver;
 
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_EXCEPTION;
@@ -22,7 +22,7 @@ import static net.igenius.mqttservice.MQTTServiceCommand.getBroadcastAction;
  * Created by Aleksandar Gotev (aleksandar@igenius.net) on 16/01/17.
  */
 
-public abstract class MQTTServiceReceiver extends BroadcastReceiver {
+public abstract class MQTTServiceReceiver extends WakefulBroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
