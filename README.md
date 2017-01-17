@@ -10,7 +10,7 @@ A tiny wrapper around [Eclipse Paho MQTT Java library](https://github.com/eclips
 
 ## Setup
 ```groovy
-compile 'net.igenius:mqttservice:1.0'
+compile 'net.igenius:mqttservice:1.1'
 ```
 
 Before using the library, you have to initialize it. The ideal place to do that is in your [Application subclass](http://developer.android.com/reference/android/app/Application.html):
@@ -42,6 +42,14 @@ MQTTServiceCommand.disconnect(final Context context)
 // subscribe to one or more topics
 MQTTServiceCommand.subscribe(final Context context, final int qos,
                              final String... topics)
+
+// connect to a broker and subscribe to one or more topics with a QoS
+MQTTServiceCommand.connectAndSubscribe(final Context context,
+                                       final String brokerUrl,
+                                       final String clientId,
+                                       final String username,
+                                       final String password,
+                                       final int qos, final String... topics)
 
 // publish a string payload to a topic
 MQTTServiceCommand.publish(final Context context, final String topic,

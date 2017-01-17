@@ -7,7 +7,6 @@ import com.google.gson.Gson;
 
 import java.util.UUID;
 
-import static android.R.attr.action;
 import static net.igenius.mqttservice.MQTTService.NAMESPACE;
 
 /**
@@ -16,12 +15,13 @@ import static net.igenius.mqttservice.MQTTService.NAMESPACE;
 
 public class MQTTServiceCommand {
 
-    static final String BROADCAST_ACTION = ".mqtt.broadcast";
+    static final String BROADCAST_ACTION_SUFFIX = ".mqtt.broadcast";
 
     static final String ACTION_CONNECT = ".mqtt.connect";
     static final String ACTION_DISCONNECT = ".mqtt.disconnect";
     static final String ACTION_PUBLISH = ".mqtt.publish";
     static final String ACTION_SUBSCRIBE = ".mqtt.subscribe";
+    static final String ACTION_CONNECT_AND_SUBSCRIBE = ".mqtt.connect-and-subscribe";
 
     static final String PARAM_BROKER_URL = "brokerUrl";
     static final String PARAM_CLIENT_ID = "clientId";
@@ -85,7 +85,7 @@ public class MQTTServiceCommand {
         intent.putExtra(PARAM_TOPICS, topics);
 
         String uuid = UUID.randomUUID().toString();
-        intent.putExtra(PARAM_REQUEST_ID, action + "/" + uuid);
+        intent.putExtra(PARAM_REQUEST_ID, ACTION_SUBSCRIBE + "/" + uuid);
 
         context.startService(intent);
 
@@ -100,6 +100,41 @@ public class MQTTServiceCommand {
      */
     public static String subscribe(final Context context, final String... topics) {
         return subscribe(context, 0, topics);
+    }
+
+    /**
+     * Connects to an MQTT broker and subscribes to one or more topics if the connection is
+     * successful.
+     * @param context application context
+     * @param brokerUrl Url to which to connect. Example: ssl://mqtt.server.com:1234 or tcp://mqtt.server.com:1234
+     * @param clientId client ID to give to this client
+     * @param username username
+     * @param password password
+     * @param qos QoS to use (0, 1 or 2)
+     * @param topics topics on which to subscribe
+     * @return request Id, to be used in receiver to track events associated to this request
+     */
+    public static String connectAndSubscribe(final Context context, final String brokerUrl,
+                                             final String clientId, final String username,
+                                             final String password, final int qos,
+                                             final String... topics) {
+        Intent intent = new Intent(context, MQTTService.class);
+        intent.setAction(ACTION_CONNECT_AND_SUBSCRIBE);
+
+        intent.putExtra(PARAM_BROKER_URL, brokerUrl);
+        intent.putExtra(PARAM_CLIENT_ID, clientId);
+        intent.putExtra(PARAM_USERNAME, username);
+        intent.putExtra(PARAM_PASSWORD, password);
+
+        intent.putExtra(PARAM_QOS, Integer.toString(qos));
+        intent.putExtra(PARAM_TOPICS, topics);
+
+        String uuid = UUID.randomUUID().toString();
+        intent.putExtra(PARAM_REQUEST_ID, ACTION_CONNECT_AND_SUBSCRIBE + "/" + uuid);
+
+        context.startService(intent);
+
+        return uuid;
     }
 
     /**
@@ -155,7 +190,7 @@ public class MQTTServiceCommand {
     }
 
     protected static String getBroadcastAction() {
-        return NAMESPACE + BROADCAST_ACTION;
+        return NAMESPACE + BROADCAST_ACTION_SUFFIX;
     }
 
     private static String startService(final Context context, final String action, String... params) {

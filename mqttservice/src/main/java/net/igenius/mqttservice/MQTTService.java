@@ -13,6 +13,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import java.util.UUID;
 
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_CONNECT;
+import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_CONNECT_AND_SUBSCRIBE;
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_DISCONNECT;
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_PUBLISH;
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_SUBSCRIBE;
@@ -106,9 +107,16 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         String action = mIntent.getAction();
         String requestId = getParameter(PARAM_REQUEST_ID);
 
-        if (ACTION_CONNECT.equals(action)) {
-            onConnect(requestId, getParameter(PARAM_BROKER_URL), getParameter(PARAM_CLIENT_ID),
-                      getParameter(PARAM_USERNAME), getParameter(PARAM_PASSWORD));
+        if (ACTION_CONNECT.equals(action) || ACTION_CONNECT_AND_SUBSCRIBE.equals(action)) {
+            boolean connected = onConnect(requestId, getParameter(PARAM_BROKER_URL),
+                    getParameter(PARAM_CLIENT_ID), getParameter(PARAM_USERNAME),
+                    getParameter(PARAM_PASSWORD));
+
+            if (ACTION_CONNECT_AND_SUBSCRIBE.equals(action) && connected) {
+                int qos = Integer.parseInt(getParameter(PARAM_QOS));
+                String[] topics = mIntent.getStringArrayExtra(PARAM_TOPICS);
+                onSubscribe(requestId, qos, topics);
+            }
 
         } else if (ACTION_DISCONNECT.equals(action)) {
             onDisconnect(requestId);
@@ -122,11 +130,11 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         }
     }
 
-    private void onConnect(final String requestId,
-                           final String brokerUrl,
-                           final String clientId,
-                           final String username,
-                           final String password) {
+    private boolean onConnect(final String requestId,
+                              final String brokerUrl,
+                              final String clientId,
+                              final String username,
+                              final String password) {
 
         MQTTServiceLogger.debug(getClass().getSimpleName(), requestId + " Connect to "
                 + brokerUrl + " with user: " + username + " and password: " + password);
@@ -163,8 +171,11 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                 }
             }
 
+            return true;
+
         } catch (MqttException exc) {
             broadcastException(requestId, new MqttException(exc));
+            return false;
         }
     }
 

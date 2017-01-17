@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onConnectionSuccessful(Context context, String requestId) {
             Log.e("Receiver", "Connected!");
-            MQTTServiceCommand.subscribe(context, subscribeTopic);
         }
 
         @Override
@@ -64,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         MQTTService.NAMESPACE = "net.igenius.mqttdemo";
         MQTTServiceLogger.setLogLevel(MQTTServiceLogger.LogLevel.DEBUG);
-        MQTTServiceCommand.connect(this, server, clientId, username, password);
+        MQTTServiceCommand.connectAndSubscribe(this, server, clientId, username, password, 0, subscribeTopic);
     }
 
     @Override
