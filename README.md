@@ -29,7 +29,29 @@ public class Initializer extends Application {
 ```
 
 ## Send commands to the MQTT service
-All the commands supported by the service are implemented in the `MQTTServiceCommand` class.
+All the commands supported by the service are implemented in the `MQTTServiceCommand` class. Some of them are:
+```java
+// connect to the broker
+MQTTServiceCommand.connect(final Context context, final String brokerUrl,
+                           final String clientId, final String username,
+                           final String password)
+
+// disconnect from the broker
+MQTTServiceCommand.disconnect(final Context context)
+
+// subscribe to one or more topics
+MQTTServiceCommand.subscribe(final Context context, final int qos,
+                             final String... topics)
+
+// publish a string payload to a topic
+MQTTServiceCommand.publish(final Context context, final String topic,
+                           final String payload, final int qos)
+
+// publish an object to a topic. It will be automatically serialized to JSON
+MQTTServiceCommand.publish(final Context context, final String topic,
+                           final Object object, final int qos)
+```
+Explore the class for complete JavaDocs and all the available options.
 
 ## Receive MQTT events
 ### Globally in the app
@@ -157,4 +179,4 @@ MQTTServiceLogger.setLoggerDelegate(new MQTTServiceLogger.LoggerDelegate() {
 ```
 
 ## Example
-You can find a fully working demo app which uses this library in the `examples-app` directory. Just checkout the project and give it a try.
+You can find a fully working demo app which uses this library in the `example-app` directory. Just checkout the project and give it a try.
