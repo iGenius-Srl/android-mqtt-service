@@ -41,6 +41,15 @@ public class MQTTServiceCommand {
     static final String BROADCAST_SUBSCRIPTION_SUCCESS = "subscriptionSuccess";
     static final String BROADCAST_PUBLISH_SUCCESS = "publishSuccess";
 
+    /**
+     * Connects to an MQTT broker.
+     * @param context application context
+     * @param brokerUrl Url to which to connect. Example: ssl://mqtt.server.com:1234 or tcp://mqtt.server.com:1234
+     * @param clientId client ID to give to this client
+     * @param username username
+     * @param password password
+     * @return request Id, to be used in receiver to track events associated to this request
+     */
     public static String connect(final Context context, final String brokerUrl,
                                  final String clientId, final String username,
                                  final String password) {
@@ -52,10 +61,22 @@ public class MQTTServiceCommand {
         );
     }
 
+    /**
+     * Disconnects from the MQTT broker and shuts down the service
+     * @param context application context
+     * @return request Id, to be used in receiver to track events associated to this request
+     */
     public static String disconnect(final Context context) {
         return startService(context, ACTION_DISCONNECT);
     }
 
+    /**
+     * Subscribes to one or many topics at once.
+     * @param context application context
+     * @param qos QoS to use (0, 1 or 2)
+     * @param topics topics on which to subscribe
+     * @return request Id, to be used in receiver to track events associated to this request
+     */
     public static String subscribe(final Context context, final int qos, final String... topics) {
         Intent intent = new Intent(context, MQTTService.class);
         intent.setAction(ACTION_SUBSCRIBE);
@@ -71,10 +92,24 @@ public class MQTTServiceCommand {
         return uuid;
     }
 
+    /**
+     * Subscribe to one or many topics at once with QoS 0.
+     * @param context application context
+     * @param topics topics on which to subscribe
+     * @return request Id, to be used in receiver to track events associated to this request
+     */
     public static String subscribe(final Context context, final String... topics) {
         return subscribe(context, 0, topics);
     }
 
+    /**
+     * Publish some content on a topic.
+     * @param context application context
+     * @param topic topic on which to publish
+     * @param payload payload to publish
+     * @param qos QoS to use (0, 1 or 2)
+     * @return request Id, to be used in receiver to track events associated to this request
+     */
     public static String publish(final Context context, final String topic, final String payload,
                                  final int qos) {
         return startService(context, ACTION_PUBLISH,
@@ -84,17 +119,39 @@ public class MQTTServiceCommand {
         );
     }
 
+    /**
+     * Publish some content on a topic with QoS 0.
+     * @param context application context
+     * @param topic topic on which to publish
+     * @param payload payload to publish
+     * @return request Id, to be used in receiver to track events associated to this request
+     */
     public static String publish(final Context context, final String topic, final String payload) {
         return publish(context, topic, payload, 0);
     }
 
-    public static String publish(final Context context, final String topic, final Object payload,
+    /**
+     * Publish an object, which will be serialized into JSON, on a topic.
+     * @param context application context
+     * @param topic topic on which to publish
+     * @param object object to publish
+     * @param qos QoS to use (0, 1 or 2)
+     * @return request Id, to be used in receiver to track events associated to this request
+     */
+    public static String publish(final Context context, final String topic, final Object object,
                                  final int qos) {
-        return publish(context, topic, new Gson().toJson(payload), qos);
+        return publish(context, topic, new Gson().toJson(object), qos);
     }
 
-    public static String publish(final Context context, final String topic, final Object payload) {
-        return publish(context, topic, payload, 0);
+    /**
+     * Publish an object on a topic with QoS 0.
+     * @param context application context
+     * @param topic topic on which to publish
+     * @param object object to publish
+     * @return request Id, to be used in receiver to track events associated to this request
+     */
+    public static String publish(final Context context, final String topic, final Object object) {
+        return publish(context, topic, object, 0);
     }
 
     protected static String getBroadcastAction() {

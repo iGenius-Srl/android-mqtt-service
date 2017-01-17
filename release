@@ -1,0 +1,2 @@
+#!/bin/bash
+./gradlew :mqttservice:clean :mqttservice:build :mqttservice:bintrayUpload
