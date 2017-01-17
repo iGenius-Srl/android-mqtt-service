@@ -86,6 +86,16 @@ public abstract class MQTTServiceReceiver extends WakefulBroadcastReceiver {
         context.unregisterReceiver(this);
     }
 
+    /**
+     * Gets the IntentFilter used to receive MQTT Service Broadcasts.
+     * @return IntentFilter
+     */
+    public static IntentFilter getIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(getBroadcastAction());
+        return intentFilter;
+    }
+
     public abstract void onPublishSuccessful(Context context, String requestId, String topic);
 
     public abstract void onSubscriptionSuccessful(Context context, String requestId, String topic);

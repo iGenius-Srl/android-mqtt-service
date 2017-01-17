@@ -3,7 +3,7 @@ package net.igenius.mqttservice;
 import android.content.Intent;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -35,7 +35,7 @@ import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_TOPICS;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_USERNAME;
 import static net.igenius.mqttservice.MQTTServiceCommand.getBroadcastAction;
 
-public class MQTTService extends BackgroundService implements Runnable, MqttCallback {
+public class MQTTService extends BackgroundService implements Runnable, MqttCallbackExtended {
 
     public static String NAMESPACE = "net.igenius.mqtt";
     public static int KEEP_ALIVE_INTERVAL = 60; //measured in seconds
@@ -44,6 +44,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
     private Intent mIntent;
     private MqttClient mClient;
     private boolean mShutdown = false;
+    private String mConnectionRequestId = null;
 
     private String getParameter(String key) {
         return mIntent.getStringExtra(key);
@@ -139,6 +140,8 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         MQTTServiceLogger.debug(getClass().getSimpleName(), requestId + " Connect to "
                 + brokerUrl + " with user: " + username + " and password: " + password);
 
+        mConnectionRequestId = requestId;
+
         try {
             if (mClient == null) {
                 MQTTServiceLogger.debug("onConnect", "Creating new MQTT connection");
@@ -158,17 +161,9 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
                 mClient.connect(connectOptions);
                 MQTTServiceLogger.debug("onConnect", "Connected");
-                broadcast(BROADCAST_CONNECTION_SUCCESS, requestId);
 
             } else {
-                if (mClient.isConnected()) {
-                    MQTTServiceLogger.debug("onConnect", "Client already connected, nothing to do");
-                } else {
-                    MQTTServiceLogger.debug("onConnect", "Reconnecting MQTT");
-
-                    mClient.reconnect();
-                    broadcast(BROADCAST_CONNECTION_SUCCESS, requestId);
-                }
+                reconnect(requestId);
             }
 
             return true;
@@ -176,6 +171,19 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         } catch (MqttException exc) {
             broadcastException(requestId, new MqttException(exc));
             return false;
+        }
+    }
+
+    private void reconnect(String requestId) throws MqttException {
+        if (mClient == null)
+            return;
+
+        if (mClient.isConnected()) {
+            MQTTServiceLogger.debug("reconnect", "Client already connected, nothing to do");
+        } else {
+            MQTTServiceLogger.debug("reconnect", "Reconnecting MQTT");
+
+            mClient.reconnect();
         }
     }
 
@@ -271,5 +279,16 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         //TODO: check what this does
+    }
+
+    @Override
+    public void connectComplete(boolean reconnect, String serverURI) {
+        String requestId = reconnect ? UUID.randomUUID().toString() : mConnectionRequestId;
+
+        if (reconnect) {
+            MQTTServiceLogger.debug("reconnect", "Reconnected to " + serverURI);
+        }
+
+        broadcast(BROADCAST_CONNECTION_SUCCESS, requestId);
     }
 }
