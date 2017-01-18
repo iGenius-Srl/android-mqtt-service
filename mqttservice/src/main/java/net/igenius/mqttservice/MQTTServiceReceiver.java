@@ -15,7 +15,6 @@ import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_PAYLOAD;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_REQUEST_ID;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_TOPIC;
-import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_TOPICS;
 import static net.igenius.mqttservice.MQTTServiceCommand.getBroadcastAction;
 
 /**
@@ -51,7 +50,7 @@ public abstract class MQTTServiceReceiver extends WakefulBroadcastReceiver {
                              intent.getStringExtra(PARAM_PAYLOAD));
 
         } else if (BROADCAST_SUBSCRIPTION_SUCCESS.equals(broadcastType)) {
-            onSubscriptionSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPICS));
+            onSubscriptionSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPIC));
 
         } else if (BROADCAST_PUBLISH_SUCCESS.equals(broadcastType)) {
             onPublishSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPIC));

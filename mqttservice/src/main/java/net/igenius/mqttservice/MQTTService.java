@@ -232,7 +232,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                 MQTTServiceLogger.debug("onSubscribe", "Successfully subscribed to topic: " + topic);
 
                 broadcast(BROADCAST_SUBSCRIPTION_SUCCESS, requestId,
-                        PARAM_TOPICS, topic
+                        PARAM_TOPIC, topic
                 );
             }
 
