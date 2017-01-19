@@ -10,6 +10,9 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_CONNECT;
@@ -23,6 +26,7 @@ import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_MESSAGE_ARRIV
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_PUBLISH_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_ERROR;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_SUCCESS;
+import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROADCAST_TYPE;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROKER_URL;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_CLIENT_ID;
@@ -46,6 +50,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
     private MqttClient mClient;
     private boolean mShutdown = false;
     private String mConnectionRequestId = null;
+    private HashMap<String, Integer> mTopicsToAutoResubscribe = new LinkedHashMap<>();
 
     private String getParameter(String key) {
         return mIntent.getStringExtra(key);
@@ -123,7 +128,8 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             if (ACTION_CONNECT_AND_SUBSCRIBE.equals(action) && connected) {
                 int qos = Integer.parseInt(getParameter(PARAM_QOS));
                 String[] topics = mIntent.getStringArrayExtra(PARAM_TOPICS);
-                onSubscribe(requestId, qos, topics);
+                boolean autoResubscribe = mIntent.getBooleanExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, false);
+                onSubscribe(requestId, qos, autoResubscribe, topics);
             }
 
         } else if (ACTION_DISCONNECT.equals(action)) {
@@ -131,6 +137,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
         } else if (ACTION_SUBSCRIBE.equals(action)) {
             onSubscribe(requestId, Integer.parseInt(getParameter(PARAM_QOS)),
+                        mIntent.getBooleanExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, false),
                         mIntent.getStringArrayExtra(PARAM_TOPICS));
 
         } else if (ACTION_PUBLISH.equals(action)) {
@@ -153,6 +160,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             if (mClient == null) {
                 MQTTServiceLogger.debug("onConnect", "Creating new MQTT connection");
 
+                mTopicsToAutoResubscribe.clear();
                 mClient = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
                 mClient.setCallback(this);
 
@@ -206,6 +214,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
         try {
             MQTTServiceLogger.debug("onDisconnect", "Disconnecting MQTT");
+            mTopicsToAutoResubscribe.clear();
             mClient.disconnect();
 
         } catch (Exception e) {
@@ -221,7 +230,9 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         }
     }
 
-    private void onSubscribe(final String requestId, final int qos, final String[] topics) {
+    private void onSubscribe(final String requestId, final int qos,
+                             final boolean autoResubscribeOnConnect,
+                             final String... topics) {
         if (topics == null || topics.length == 0) {
             broadcastException(BROADCAST_EXCEPTION, requestId,
                                new Exception("No topics passed to subscribe!"));
@@ -242,6 +253,11 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             try {
                 MQTTServiceLogger.debug("onSubscribe", "Subscribing to topic: " + topic + " with QoS " + qos);
                 mClient.subscribe(topic, qos);
+
+                if (autoResubscribeOnConnect) {
+                    mTopicsToAutoResubscribe.put(topic, qos);
+                }
+
                 MQTTServiceLogger.debug("onSubscribe", "Successfully subscribed to topic: " + topic);
 
                 broadcast(BROADCAST_SUBSCRIPTION_SUCCESS, requestId,
@@ -302,6 +318,13 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
         if (reconnect) {
             MQTTServiceLogger.debug("reconnect", "Reconnected to " + serverURI);
+
+            if (!mTopicsToAutoResubscribe.isEmpty()) {
+                MQTTServiceLogger.debug("reconnect", "auto resubscribing to topics");
+                for (Map.Entry<String, Integer> entry : mTopicsToAutoResubscribe.entrySet()) {
+                    onSubscribe(requestId, entry.getValue(), true, entry.getKey());
+                }
+            }
         }
 
         broadcast(BROADCAST_CONNECTION_SUCCESS, requestId);

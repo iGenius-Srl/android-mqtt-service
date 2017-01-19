@@ -34,6 +34,7 @@ public class MQTTServiceCommand {
     static final String PARAM_REQUEST_ID = "reqId";
     static final String PARAM_BROADCAST_TYPE = "broadcastType";
     static final String PARAM_EXCEPTION = "exception";
+    static final String PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT = "autoResubscribeOnReconnect";
 
     static final String BROADCAST_EXCEPTION = "exception";
     static final String BROADCAST_CONNECTION_SUCCESS = "connectionSuccess";
@@ -75,14 +76,20 @@ public class MQTTServiceCommand {
      * Subscribes to one or many topics at once.
      * @param context application context
      * @param qos QoS to use (0, 1 or 2)
+     * @param autoResubscribeOnReconnect if you want the topics passed as parameters to be
+     *                                   automatically resubscribed after each one automatic
+     *                                   reconnection
      * @param topics topics on which to subscribe
      * @return request Id, to be used in receiver to track events associated to this request
      */
-    public static String subscribe(final Context context, final int qos, final String... topics) {
+    public static String subscribe(final Context context, final int qos,
+                                   final boolean autoResubscribeOnReconnect,
+                                   final String... topics) {
         Intent intent = new Intent(context, MQTTService.class);
         intent.setAction(ACTION_SUBSCRIBE);
 
         intent.putExtra(PARAM_QOS, Integer.toString(qos));
+        intent.putExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, autoResubscribeOnReconnect);
         intent.putExtra(PARAM_TOPICS, topics);
 
         String uuid = UUID.randomUUID().toString();
@@ -96,11 +103,15 @@ public class MQTTServiceCommand {
     /**
      * Subscribe to one or many topics at once with QoS 0.
      * @param context application context
+     * @param autoResubscribeOnReconnect if you want the topics passed as parameters to be
+     *                                   automatically resubscribed after each one automatic
+     *                                   reconnection
      * @param topics topics on which to subscribe
      * @return request Id, to be used in receiver to track events associated to this request
      */
-    public static String subscribe(final Context context, final String... topics) {
-        return subscribe(context, 0, topics);
+    public static String subscribe(final Context context, final boolean autoResubscribeOnReconnect,
+                                   final String... topics) {
+        return subscribe(context, 0, autoResubscribeOnReconnect, topics);
     }
 
     /**
@@ -112,12 +123,16 @@ public class MQTTServiceCommand {
      * @param username username
      * @param password password
      * @param qos QoS to use (0, 1 or 2)
+     * @param autoResubscribeOnReconnect if you want the topics passed as parameters to be
+     *                                   automatically resubscribed after each one automatic
+     *                                   reconnection
      * @param topics topics on which to subscribe
      * @return request Id, to be used in receiver to track events associated to this request
      */
     public static String connectAndSubscribe(final Context context, final String brokerUrl,
                                              final String clientId, final String username,
                                              final String password, final int qos,
+                                             final boolean autoResubscribeOnReconnect,
                                              final String... topics) {
         Intent intent = new Intent(context, MQTTService.class);
         intent.setAction(ACTION_CONNECT_AND_SUBSCRIBE);
@@ -128,6 +143,7 @@ public class MQTTServiceCommand {
         intent.putExtra(PARAM_PASSWORD, password);
 
         intent.putExtra(PARAM_QOS, Integer.toString(qos));
+        intent.putExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, autoResubscribeOnReconnect);
         intent.putExtra(PARAM_TOPICS, topics);
 
         String uuid = UUID.randomUUID().toString();
