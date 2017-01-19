@@ -1,0 +1,17 @@
+#!/bin/bash -e
+# if paho directory exists, enter into int an pull, otherwise clone project
+if [ -d "paho" ]; then
+  cd paho
+  git pull
+else
+  git clone https://github.com/iGenius-Srl/paho.mqtt.java.git paho
+  cd paho
+fi
+
+rm -rf org.eclipse.paho.client.mqttv3/target/
+mvn package -DskipTests
+cd ..
+cd mqttservice/libs/
+rm -rf *
+cp ../../paho/org.eclipse.paho.client.mqttv3/target/*.jar .
+rm -rf $(ls | grep ".-sources.jar")
