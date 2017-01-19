@@ -21,6 +21,7 @@ import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_SU
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_MESSAGE_ARRIVED;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_PUBLISH_SUCCESS;
+import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_ERROR;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROADCAST_TYPE;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROKER_URL;
@@ -69,13 +70,19 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         sendBroadcast(intent);
     }
 
-    private void broadcastException(String requestId, Exception exception) {
+    private void broadcastException(String type, String requestId, Exception exception, String... params) {
         Intent intent = new Intent();
 
         intent.setAction(getBroadcastAction());
-        intent.putExtra(PARAM_BROADCAST_TYPE, BROADCAST_EXCEPTION);
+        intent.putExtra(PARAM_BROADCAST_TYPE, type);
         intent.putExtra(PARAM_REQUEST_ID, requestId);
         intent.putExtra(PARAM_EXCEPTION, exception);
+
+        if (params != null && params.length > 0) {
+            for (int i = 0; i <= params.length - 2; i += 2) {
+                intent.putExtra(params[i], params[i + 1]);
+            }
+        }
 
         sendBroadcast(intent);
     }
@@ -169,7 +176,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             return true;
 
         } catch (Exception exc) {
-            broadcastException(requestId, new MqttException(exc));
+            broadcastException(BROADCAST_EXCEPTION, requestId, new MqttException(exc));
             return false;
         }
     }
@@ -202,7 +209,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             mClient.disconnect();
 
         } catch (Exception e) {
-            broadcastException(requestId, new MqttException(e));
+            broadcastException(BROADCAST_EXCEPTION, requestId, new MqttException(e));
 
             try {
                 mClient.disconnectForcibly();
@@ -216,17 +223,23 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
     private void onSubscribe(final String requestId, final int qos, final String[] topics) {
         if (topics == null || topics.length == 0) {
-            broadcastException(requestId, new Exception("No topics passed to subscribe!"));
+            broadcastException(BROADCAST_EXCEPTION, requestId,
+                               new Exception("No topics passed to subscribe!"));
             return;
         }
 
         if (!clientIsConnected()) {
-            broadcastException(requestId, new Exception("Can't subscribe to topics, client not connected!"));
+            for (String topic : topics) {
+                broadcastException(BROADCAST_SUBSCRIPTION_ERROR, requestId,
+                        new Exception("Can't subscribe to topics, client not connected!"),
+                        PARAM_TOPIC, topic
+                );
+            }
             return;
         }
 
-        try {
-            for (String topic : topics) {
+        for (String topic : topics) {
+            try {
                 MQTTServiceLogger.debug("onSubscribe", "Subscribing to topic: " + topic + " with QoS " + qos);
                 mClient.subscribe(topic, qos);
                 MQTTServiceLogger.debug("onSubscribe", "Successfully subscribed to topic: " + topic);
@@ -234,16 +247,18 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                 broadcast(BROADCAST_SUBSCRIPTION_SUCCESS, requestId,
                         PARAM_TOPIC, topic
                 );
+            } catch (Exception e) {
+                broadcastException(BROADCAST_SUBSCRIPTION_ERROR, requestId, new MqttException(e),
+                        PARAM_TOPIC, topic
+                );
             }
-
-        } catch (Exception e) {
-            broadcastException(requestId, new MqttException(e));
         }
     }
 
     private void onPublish(final String requestId, final String topic, final String payload) {
         if (!clientIsConnected()) {
-            broadcastException(requestId, new Exception("Can't publish to topic: " + topic + ", client not connected!"));
+            broadcastException(BROADCAST_EXCEPTION, requestId,
+                               new Exception("Can't publish to topic: " + topic + ", client not connected!"));
             return;
         }
 
@@ -259,13 +274,13 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             );
 
         } catch (Exception exc) {
-            broadcastException(requestId, new MqttException(exc));
+            broadcastException(BROADCAST_EXCEPTION, requestId, new MqttException(exc));
         }
     }
 
     @Override
     public void connectionLost(Throwable cause) {
-        broadcastException(UUID.randomUUID().toString(), new Exception(cause));
+        broadcastException(BROADCAST_EXCEPTION, UUID.randomUUID().toString(), new Exception(cause));
     }
 
     @Override

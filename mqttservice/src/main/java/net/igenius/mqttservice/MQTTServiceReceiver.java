@@ -9,6 +9,7 @@ import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_SU
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_MESSAGE_ARRIVED;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_PUBLISH_SUCCESS;
+import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_ERROR;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROADCAST_TYPE;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_EXCEPTION;
@@ -51,6 +52,10 @@ public abstract class MQTTServiceReceiver extends WakefulBroadcastReceiver {
 
         } else if (BROADCAST_SUBSCRIPTION_SUCCESS.equals(broadcastType)) {
             onSubscriptionSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPIC));
+
+        } else if (BROADCAST_SUBSCRIPTION_ERROR.equals(broadcastType)) {
+            onSubscriptionError(context, requestId, intent.getStringExtra(PARAM_TOPIC),
+                                (Exception) intent.getSerializableExtra(PARAM_EXCEPTION));
 
         } else if (BROADCAST_PUBLISH_SUCCESS.equals(broadcastType)) {
             onPublishSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPIC));
@@ -98,6 +103,8 @@ public abstract class MQTTServiceReceiver extends WakefulBroadcastReceiver {
     public abstract void onPublishSuccessful(Context context, String requestId, String topic);
 
     public abstract void onSubscriptionSuccessful(Context context, String requestId, String topic);
+
+    public abstract void onSubscriptionError(Context context, String requestId, String topic, Exception exception);
 
     public abstract void onMessageArrived(Context context, String topic, String payload);
 

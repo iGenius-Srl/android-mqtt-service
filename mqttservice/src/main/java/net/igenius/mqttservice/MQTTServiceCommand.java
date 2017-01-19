@@ -15,7 +15,7 @@ import static net.igenius.mqttservice.MQTTService.NAMESPACE;
 
 public class MQTTServiceCommand {
 
-    static final String BROADCAST_ACTION_SUFFIX = ".mqtt.broadcast";
+    private static final String BROADCAST_ACTION_SUFFIX = ".mqtt.broadcast";
 
     static final String ACTION_CONNECT = ".mqtt.connect";
     static final String ACTION_DISCONNECT = ".mqtt.disconnect";
@@ -39,6 +39,7 @@ public class MQTTServiceCommand {
     static final String BROADCAST_CONNECTION_SUCCESS = "connectionSuccess";
     static final String BROADCAST_MESSAGE_ARRIVED = "messageArrived";
     static final String BROADCAST_SUBSCRIPTION_SUCCESS = "subscriptionSuccess";
+    static final String BROADCAST_SUBSCRIPTION_ERROR = "subscriptionError";
     static final String BROADCAST_PUBLISH_SUCCESS = "publishSuccess";
 
     /**

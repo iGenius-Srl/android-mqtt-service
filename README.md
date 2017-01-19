@@ -72,17 +72,28 @@ import net.igenius.mqttservice.MQTTServiceReceiver;
 public class MQTTReceiver extends MQTTServiceReceiver {
 
     @Override
-    public void onPublishSuccessful(Context context, String requestId, String topic) {
+    public void onPublishSuccessful(Context context, String requestId,
+                                    String topic) {
         // called when a message has been successfully published
     }
 
     @Override
-    public void onSubscriptionSuccessful(Context context, String requestId, String topic) {
+    public void onSubscriptionSuccessful(Context context, String requestId,
+                                         String topic) {
         // called when a subscription is successful
     }
 
     @Override
-    public void onMessageArrived(Context context, String topic, String payload) {
+    public void onSubscriptionError(Context context, String requestId,
+                                    String topic, Exception exception) {
+        // called when a subscription is not successful.
+        // This usually happens when the broker does not give permissions
+        // for the requested topic
+    }
+
+    @Override
+    public void onMessageArrived(Context context, String topic,
+                                 String payload) {
         // called when a new message arrives on any topic
     }
 
@@ -92,7 +103,8 @@ public class MQTTReceiver extends MQTTServiceReceiver {
     }
 
     @Override
-    public void onException(Context context, String requestId, Exception exception) {
+    public void onException(Context context, String requestId,
+                            Exception exception) {
         // called when an error happens
     }
 }
@@ -115,8 +127,17 @@ Bear in mind that `com.yourcompany.yourapp` MUST be the same you defined in `MQT
 public class YourActivity extends AppCompatActivity {
     private MQTTServiceReceiver receiver = new MQTTServiceReceiver() {
         @Override
-        public void onSubscriptionSuccessful(Context context, String requestId, String topic) {
+        public void onSubscriptionSuccessful(Context context,
+                                             String requestId, String topic) {
             // called when a message has been successfully published
+        }
+
+        @Override
+        public void onSubscriptionError(Context context, String requestId,
+                                        String topic, Exception exception) {
+            // called when a subscription is not successful.
+            // This usually happens when the broker does not give permissions
+            // for the requested topic
         }
 
         @Override
@@ -125,7 +146,8 @@ public class YourActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onMessageArrived(Context context, String topic, String payload) {
+        public void onMessageArrived(Context context, String topic,
+                                     String payload) {
             // called when a new message arrives on any topic
         }
 
@@ -135,7 +157,8 @@ public class YourActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onException(Context context, String requestId, Exception exception) {
+        public void onException(Context context, String requestId,
+                                Exception exception) {
             // called when an error happens
         }
     };

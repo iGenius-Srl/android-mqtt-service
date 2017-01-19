@@ -17,9 +17,12 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
 
     private MQTTServiceReceiver receiver = new MQTTServiceReceiver() {
+
+        private static final String TAG = "Receiver";
+
         @Override
         public void onSubscriptionSuccessful(Context context, String requestId, String topic) {
-            Log.e("Receiver", "Subscribed to " + topic);
+            Log.e(TAG, "Subscribed to " + topic);
 
             JsonObject request = new JsonObject();
             request.addProperty("question", "best time to post");
@@ -29,23 +32,28 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
+        public void onSubscriptionError(Context context, String requestId, String topic, Exception exception) {
+            Log.e(TAG, "Can't subscribe to " + topic, exception);
+        }
+
+        @Override
         public void onPublishSuccessful(Context context, String requestId, String topic) {
-            Log.e("Receiver", "Successfully published on topic: " + topic);
+            Log.e(TAG, "Successfully published on topic: " + topic);
         }
 
         @Override
         public void onMessageArrived(Context context, String topic, String payload) {
-            Log.e("Receiver", "New message on " + topic + ":  " + payload);
+            Log.e(TAG, "New message on " + topic + ":  " + payload);
         }
 
         @Override
         public void onConnectionSuccessful(Context context, String requestId) {
-            Log.e("Receiver", "Connected!");
+            Log.e(TAG, "Connected!");
         }
 
         @Override
         public void onException(Context context, String requestId, Exception exception) {
-            Log.e("Receiver", requestId + " exception", exception);
+            Log.e(TAG, requestId + " exception", exception);
         }
     };
 
