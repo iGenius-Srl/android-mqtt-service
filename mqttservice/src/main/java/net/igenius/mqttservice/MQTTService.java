@@ -214,18 +214,21 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
         try {
             MQTTServiceLogger.debug("onDisconnect", "Disconnecting MQTT");
-            mTopicsToAutoResubscribe.clear();
             mClient.disconnect();
 
         } catch (Exception e) {
-            broadcastException(BROADCAST_EXCEPTION, requestId, new MqttException(e));
+            MQTTServiceLogger.error("onDisconnect",
+                    "Error while disconnecting from MQTT. Request Id: " + requestId, e);
 
             try {
                 mClient.disconnectForcibly();
-            } catch (Exception ignored) { }
+            } catch (Exception exc) {
+                MQTTServiceLogger.error("onDisconnect", "Error while disconnect forcibly", exc);
+            }
 
         } finally {
             mClient = null;
+            mTopicsToAutoResubscribe.clear();
             mShutdown = true;
         }
     }
@@ -234,8 +237,10 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                              final boolean autoResubscribeOnConnect,
                              final String... topics) {
         if (topics == null || topics.length == 0) {
-            broadcastException(BROADCAST_EXCEPTION, requestId,
-                               new Exception("No topics passed to subscribe!"));
+            broadcastException(BROADCAST_SUBSCRIPTION_ERROR, requestId,
+                    new Exception("No topics passed to subscribe!"),
+                    PARAM_TOPIC, ""
+            );
             return;
         }
 
