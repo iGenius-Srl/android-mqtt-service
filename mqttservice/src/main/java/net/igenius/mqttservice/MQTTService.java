@@ -126,7 +126,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                     getParameter(PARAM_PASSWORD));
 
             if (ACTION_CONNECT_AND_SUBSCRIBE.equals(action) && connected) {
-                int qos = Integer.parseInt(getParameter(PARAM_QOS));
+                int qos = getInt(getParameter(PARAM_QOS));
                 String[] topics = mIntent.getStringArrayExtra(PARAM_TOPICS);
                 boolean autoResubscribe = mIntent.getBooleanExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, false);
                 onSubscribe(requestId, qos, autoResubscribe, topics);
@@ -136,12 +136,21 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             onDisconnect(requestId);
 
         } else if (ACTION_SUBSCRIBE.equals(action)) {
-            onSubscribe(requestId, Integer.parseInt(getParameter(PARAM_QOS)),
+            onSubscribe(requestId, getInt(getParameter(PARAM_QOS)),
                         mIntent.getBooleanExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, false),
                         mIntent.getStringArrayExtra(PARAM_TOPICS));
 
         } else if (ACTION_PUBLISH.equals(action)) {
             onPublish(requestId, getParameter(PARAM_TOPIC), getParameter(PARAM_PAYLOAD));
+        }
+    }
+
+    private int getInt(String string) {
+        try {
+            return Integer.parseInt(string, 10);
+        } catch (Throwable exc) {
+            MQTTServiceLogger.error(getClass().getSimpleName(), "Unparsable string: " + string + ", returning 0");
+            return 0;
         }
     }
 
