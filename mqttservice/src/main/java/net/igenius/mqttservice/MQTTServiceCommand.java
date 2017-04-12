@@ -22,29 +22,29 @@ public class MQTTServiceCommand {
     static final String ACTION_PUBLISH = ".mqtt.publish";
     static final String ACTION_SUBSCRIBE = ".mqtt.subscribe";
     static final String ACTION_CONNECT_AND_SUBSCRIBE = ".mqtt.connect-and-subscribe";
-    public static final String ACTION_CHECK_CONNECTION = ".mqtt.check-connection";
+    static final String ACTION_CHECK_CONNECTION = ".mqtt.check-connection";
 
-    static final String PARAM_BROKER_URL = "brokerUrl";
-    static final String PARAM_CLIENT_ID = "clientId";
-    static final String PARAM_USERNAME = "username";
-    static final String PARAM_PASSWORD = "password";
-    static final String PARAM_TOPIC = "topic";
-    static final String PARAM_TOPICS = "topics";
-    static final String PARAM_PAYLOAD = "payload";
+    public static final String PARAM_BROKER_URL = "brokerUrl";
+    public static final String PARAM_CLIENT_ID = "clientId";
+    public static final String PARAM_USERNAME = "username";
+    public static final String PARAM_PASSWORD = "password";
+    public static final String PARAM_TOPIC = "topic";
+    public static final String PARAM_TOPICS = "topics";
+    public static final String PARAM_PAYLOAD = "payload";
     public static final String PARAM_CONNECTED = "connected";
-    static final String PARAM_QOS = "qos";
-    static final String PARAM_REQUEST_ID = "reqId";
+    public static final String PARAM_QOS = "qos";
+    public static final String PARAM_REQUEST_ID = "reqId";
     public static final String PARAM_BROADCAST_TYPE = "broadcastType";
-    static final String PARAM_EXCEPTION = "exception";
-    static final String PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT = "autoResubscribeOnReconnect";
+    public static final String PARAM_EXCEPTION = "exception";
+    public static final String PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT = "autoResubscribeOnReconnect";
 
-    static final String BROADCAST_EXCEPTION = "exception";
-    static final String BROADCAST_CONNECTION_SUCCESS = "connectionSuccess";
-    static final String BROADCAST_MESSAGE_ARRIVED = "messageArrived";
-    static final String BROADCAST_SUBSCRIPTION_SUCCESS = "subscriptionSuccess";
-    static final String BROADCAST_SUBSCRIPTION_ERROR = "subscriptionError";
-    static final String BROADCAST_PUBLISH_SUCCESS = "publishSuccess";
-    static final String BROADCAST_CONNECTION_STATUS = "connectionStatus";
+    public static final String BROADCAST_EXCEPTION = "exception";
+    public static final String BROADCAST_CONNECTION_SUCCESS = "connectionSuccess";
+    public static final String BROADCAST_MESSAGE_ARRIVED = "messageArrived";
+    public static final String BROADCAST_SUBSCRIPTION_SUCCESS = "subscriptionSuccess";
+    public static final String BROADCAST_SUBSCRIPTION_ERROR = "subscriptionError";
+    public static final String BROADCAST_PUBLISH_SUCCESS = "publishSuccess";
+    public static final String BROADCAST_CONNECTION_STATUS = "connectionStatus";
 
     /**
      * Connects to an MQTT broker.
