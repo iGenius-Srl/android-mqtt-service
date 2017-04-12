@@ -15,11 +15,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_CHECK_CONNECTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_CONNECT;
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_CONNECT_AND_SUBSCRIBE;
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_DISCONNECT;
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_PUBLISH;
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_SUBSCRIBE;
+import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_STATUS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_MESSAGE_ARRIVED;
@@ -30,6 +32,7 @@ import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_AUTO_RESUBSCRIBE_
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROADCAST_TYPE;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROKER_URL;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_CLIENT_ID;
+import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_CONNECTED;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_PASSWORD;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_PAYLOAD;
@@ -71,6 +74,17 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                 intent.putExtra(params[i], params[i + 1]);
             }
         }
+
+        sendBroadcast(intent);
+    }
+
+    private void broadcastConnectionStatus(String requestId) {
+        Intent intent = new Intent();
+
+        intent.setAction(getBroadcastAction());
+        intent.putExtra(PARAM_BROADCAST_TYPE, BROADCAST_CONNECTION_STATUS);
+        intent.putExtra(PARAM_REQUEST_ID, requestId);
+        intent.putExtra(PARAM_CONNECTED, mClient != null && mClient.isConnected());
 
         sendBroadcast(intent);
     }
@@ -142,6 +156,9 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
         } else if (ACTION_PUBLISH.equals(action)) {
             onPublish(requestId, getParameter(PARAM_TOPIC), getParameter(PARAM_PAYLOAD));
+
+        } else if (ACTION_CHECK_CONNECTION.equals(action)) {
+            broadcastConnectionStatus(requestId);
         }
     }
 
@@ -310,6 +327,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
     @Override
     public void connectionLost(Throwable cause) {
+        broadcastConnectionStatus(UUID.randomUUID().toString());
         broadcastException(BROADCAST_EXCEPTION, UUID.randomUUID().toString(), new Exception(cause));
     }
 
@@ -341,6 +359,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
             }
         }
 
+        broadcastConnectionStatus(requestId);
         broadcast(BROADCAST_CONNECTION_SUCCESS, requestId);
     }
 }

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
+import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_STATUS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_CONNECTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_MESSAGE_ARRIVED;
@@ -12,6 +13,7 @@ import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_PUBLISH_SUCCE
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_ERROR;
 import static net.igenius.mqttservice.MQTTServiceCommand.BROADCAST_SUBSCRIPTION_SUCCESS;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_BROADCAST_TYPE;
+import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_CONNECTED;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_EXCEPTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_PAYLOAD;
 import static net.igenius.mqttservice.MQTTServiceCommand.PARAM_REQUEST_ID;
@@ -59,6 +61,10 @@ public abstract class MQTTServiceReceiver extends WakefulBroadcastReceiver {
 
         } else if (BROADCAST_PUBLISH_SUCCESS.equals(broadcastType)) {
             onPublishSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPIC));
+
+        } else if (BROADCAST_CONNECTION_STATUS.equals(broadcastType)) {
+            onConnectionStatus(context, intent.getBooleanExtra(PARAM_CONNECTED, false));
+
         }
     }
 
@@ -111,5 +117,7 @@ public abstract class MQTTServiceReceiver extends WakefulBroadcastReceiver {
     public abstract void onConnectionSuccessful(Context context, String requestId);
 
     public abstract void onException(Context context, String requestId, Exception exception);
+
+    public abstract void onConnectionStatus(Context context, boolean connected);
 
 }

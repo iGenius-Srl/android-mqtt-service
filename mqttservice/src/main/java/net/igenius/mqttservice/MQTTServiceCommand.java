@@ -22,6 +22,7 @@ public class MQTTServiceCommand {
     static final String ACTION_PUBLISH = ".mqtt.publish";
     static final String ACTION_SUBSCRIBE = ".mqtt.subscribe";
     static final String ACTION_CONNECT_AND_SUBSCRIBE = ".mqtt.connect-and-subscribe";
+    static final String ACTION_CHECK_CONNECTION = ".mqtt.check-connection";
 
     static final String PARAM_BROKER_URL = "brokerUrl";
     static final String PARAM_CLIENT_ID = "clientId";
@@ -30,6 +31,7 @@ public class MQTTServiceCommand {
     static final String PARAM_TOPIC = "topic";
     static final String PARAM_TOPICS = "topics";
     static final String PARAM_PAYLOAD = "payload";
+    static final String PARAM_CONNECTED = "connected";
     static final String PARAM_QOS = "qos";
     static final String PARAM_REQUEST_ID = "reqId";
     static final String PARAM_BROADCAST_TYPE = "broadcastType";
@@ -42,6 +44,7 @@ public class MQTTServiceCommand {
     static final String BROADCAST_SUBSCRIPTION_SUCCESS = "subscriptionSuccess";
     static final String BROADCAST_SUBSCRIPTION_ERROR = "subscriptionError";
     static final String BROADCAST_PUBLISH_SUCCESS = "publishSuccess";
+    static final String BROADCAST_CONNECTION_STATUS = "connectionStatus";
 
     /**
      * Connects to an MQTT broker.
@@ -70,6 +73,10 @@ public class MQTTServiceCommand {
      */
     public static String disconnect(final Context context) {
         return startService(context, ACTION_DISCONNECT);
+    }
+
+    public static String checkConnectionStatus(final Context context) {
+        return startService(context, ACTION_CHECK_CONNECTION);
     }
 
     /**

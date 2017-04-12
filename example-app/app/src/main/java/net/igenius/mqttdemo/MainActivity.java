@@ -12,6 +12,7 @@ import net.igenius.mqttservice.MQTTServiceCommand;
 import net.igenius.mqttservice.MQTTServiceLogger;
 import net.igenius.mqttservice.MQTTServiceReceiver;
 
+import java.util.Date;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,8 +28,9 @@ public class MainActivity extends AppCompatActivity {
             JsonObject request = new JsonObject();
             request.addProperty("question", "best time to post");
             request.addProperty("lang", "en");
+            request.addProperty("request_uid", "testAndroid/" + new Date().getTime());
 
-            MQTTServiceCommand.publish(context, publishTopic, request);
+            MQTTServiceCommand.publish(context, "/advisor/" + topic.split("/")[2], request);
         }
 
         @Override
@@ -53,7 +55,13 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onException(Context context, String requestId, Exception exception) {
-            Log.e(TAG, requestId + " exception", exception);
+            exception.printStackTrace();
+            Log.e(TAG, requestId + " exception");
+        }
+
+        @Override
+        public void onConnectionStatus(Context context, boolean connected) {
+
         }
     };
 
@@ -71,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
         MQTTService.NAMESPACE = "net.igenius.mqttdemo";
         MQTTServiceLogger.setLogLevel(MQTTServiceLogger.LogLevel.DEBUG);
-        MQTTServiceCommand.connectAndSubscribe(this, server, clientId, username, password, 0, subscribeTopic);
+        MQTTServiceCommand.connectAndSubscribe(this, server, clientId, username, password, 0, true, subscribeTopic);
     }
 
     @Override
