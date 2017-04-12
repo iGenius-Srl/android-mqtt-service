@@ -22,7 +22,7 @@ public class MQTTServiceCommand {
     static final String ACTION_PUBLISH = ".mqtt.publish";
     static final String ACTION_SUBSCRIBE = ".mqtt.subscribe";
     static final String ACTION_CONNECT_AND_SUBSCRIBE = ".mqtt.connect-and-subscribe";
-    static final String ACTION_CHECK_CONNECTION = ".mqtt.check-connection";
+    public static final String ACTION_CHECK_CONNECTION = ".mqtt.check-connection";
 
     static final String PARAM_BROKER_URL = "brokerUrl";
     static final String PARAM_CLIENT_ID = "clientId";
@@ -31,10 +31,10 @@ public class MQTTServiceCommand {
     static final String PARAM_TOPIC = "topic";
     static final String PARAM_TOPICS = "topics";
     static final String PARAM_PAYLOAD = "payload";
-    static final String PARAM_CONNECTED = "connected";
+    public static final String PARAM_CONNECTED = "connected";
     static final String PARAM_QOS = "qos";
     static final String PARAM_REQUEST_ID = "reqId";
-    static final String PARAM_BROADCAST_TYPE = "broadcastType";
+    public static final String PARAM_BROADCAST_TYPE = "broadcastType";
     static final String PARAM_EXCEPTION = "exception";
     static final String PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT = "autoResubscribeOnReconnect";
 
@@ -213,7 +213,7 @@ public class MQTTServiceCommand {
         return publish(context, topic, object, 0);
     }
 
-    protected static String getBroadcastAction() {
+    public static String getBroadcastAction() {
         return NAMESPACE + BROADCAST_ACTION_SUFFIX;
     }
 
