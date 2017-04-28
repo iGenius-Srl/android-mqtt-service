@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_CHECK_CONNECTION;
 import static net.igenius.mqttservice.MQTTServiceCommand.ACTION_CONNECT;
@@ -49,14 +51,14 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
     public static int KEEP_ALIVE_INTERVAL = 60; //measured in seconds
     public static int CONNECT_TIMEOUT = 30; //measured in seconds
 
-    private Intent mIntent;
+    private BlockingQueue<Intent> mIntents = new LinkedBlockingQueue<>();
     private MqttClient mClient;
     private boolean mShutdown = false;
     private String mConnectionRequestId = null;
     private HashMap<String, Integer> mTopicsToAutoResubscribe = new LinkedHashMap<>();
 
-    private String getParameter(String key) {
-        return mIntent.getStringExtra(key);
+    private String getParameter(Intent intent, String key) {
+        return intent.getStringExtra(key);
     }
 
     private void broadcast(String type, String requestId, String... params) {
@@ -115,7 +117,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                                         "null or empty Intent passed, ignoring it!");
             } else {
                 mShutdown = false;
-                mIntent = intent;
+                mIntents.offer(intent);
                 post(this);
             }
         }
@@ -131,34 +133,39 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
     @Override
     public void run() {
-        String action = mIntent.getAction();
-        String requestId = getParameter(PARAM_REQUEST_ID);
+        try {
+            Intent intent = mIntents.take();
+            String action = intent.getAction();
+            String requestId = getParameter(intent, PARAM_REQUEST_ID);
 
-        if (ACTION_CONNECT.equals(action) || ACTION_CONNECT_AND_SUBSCRIBE.equals(action)) {
-            boolean connected = onConnect(requestId, getParameter(PARAM_BROKER_URL),
-                    getParameter(PARAM_CLIENT_ID), getParameter(PARAM_USERNAME),
-                    getParameter(PARAM_PASSWORD));
+            if (ACTION_CONNECT.equals(action) || ACTION_CONNECT_AND_SUBSCRIBE.equals(action)) {
+                boolean connected = onConnect(requestId, getParameter(intent, PARAM_BROKER_URL),
+                        getParameter(intent, PARAM_CLIENT_ID), getParameter(intent, PARAM_USERNAME),
+                        getParameter(intent, PARAM_PASSWORD));
 
-            if (ACTION_CONNECT_AND_SUBSCRIBE.equals(action) && connected) {
-                int qos = getInt(getParameter(PARAM_QOS));
-                String[] topics = mIntent.getStringArrayExtra(PARAM_TOPICS);
-                boolean autoResubscribe = mIntent.getBooleanExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, false);
-                onSubscribe(requestId, qos, autoResubscribe, topics);
+                if (ACTION_CONNECT_AND_SUBSCRIBE.equals(action) && connected) {
+                    int qos = getInt(getParameter(intent, PARAM_QOS));
+                    String[] topics = intent.getStringArrayExtra(PARAM_TOPICS);
+                    boolean autoResubscribe = intent.getBooleanExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, false);
+                    onSubscribe(requestId, qos, autoResubscribe, topics);
+                }
+
+            } else if (ACTION_DISCONNECT.equals(action)) {
+                onDisconnect(requestId);
+
+            } else if (ACTION_SUBSCRIBE.equals(action)) {
+                onSubscribe(requestId, getInt(getParameter(intent, PARAM_QOS)),
+                        intent.getBooleanExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, false),
+                        intent.getStringArrayExtra(PARAM_TOPICS));
+
+            } else if (ACTION_PUBLISH.equals(action)) {
+                onPublish(requestId, getParameter(intent, PARAM_TOPIC), getParameter(intent, PARAM_PAYLOAD));
+
+            } else if (ACTION_CHECK_CONNECTION.equals(action)) {
+                broadcastConnectionStatus(requestId);
             }
-
-        } else if (ACTION_DISCONNECT.equals(action)) {
-            onDisconnect(requestId);
-
-        } else if (ACTION_SUBSCRIBE.equals(action)) {
-            onSubscribe(requestId, getInt(getParameter(PARAM_QOS)),
-                        mIntent.getBooleanExtra(PARAM_AUTO_RESUBSCRIBE_ON_RECONNECT, false),
-                        mIntent.getStringArrayExtra(PARAM_TOPICS));
-
-        } else if (ACTION_PUBLISH.equals(action)) {
-            onPublish(requestId, getParameter(PARAM_TOPIC), getParameter(PARAM_PAYLOAD));
-
-        } else if (ACTION_CHECK_CONNECTION.equals(action)) {
-            broadcastConnectionStatus(requestId);
+        } catch (Throwable exc) {
+            MQTTServiceLogger.error(getClass().getSimpleName(), "Error while processing command", exc);
         }
     }
 
