@@ -110,6 +110,11 @@ public class MQTTReceiver extends MQTTServiceReceiver {
                             Exception exception) {
         // called when an error happens
     }
+
+    @Override
+    public void onConnectionStatus(Context context, boolean connected) {
+        // called when connection status is requested or changes
+    }
 }
 ```
 and then register it into the manifest (before `</application>` tag):
@@ -163,6 +168,11 @@ public class YourActivity extends AppCompatActivity {
         public void onException(Context context, String requestId,
                                 Exception exception) {
             // called when an error happens
+        }
+
+        @Override
+        public void onConnectionStatus(Context context, boolean connected) {
+            // called when connection status is requested or changes
         }
     };
 
