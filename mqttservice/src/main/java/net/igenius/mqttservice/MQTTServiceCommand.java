@@ -3,8 +3,6 @@ package net.igenius.mqttservice;
 import android.content.Context;
 import android.content.Intent;
 
-import com.google.gson.Gson;
-
 import java.util.UUID;
 
 import static net.igenius.mqttservice.MQTTService.NAMESPACE;
@@ -58,7 +56,7 @@ public class MQTTServiceCommand {
     public static String connect(final Context context, final String brokerUrl,
                                  final String clientId, final String username,
                                  final String password) {
-        return startService(context, ACTION_CONNECT,
+        return startService(context, ACTION_CONNECT, null,
                 PARAM_BROKER_URL, brokerUrl,
                 PARAM_CLIENT_ID, clientId,
                 PARAM_USERNAME, username,
@@ -72,11 +70,11 @@ public class MQTTServiceCommand {
      * @return request Id, to be used in receiver to track events associated to this request
      */
     public static String disconnect(final Context context) {
-        return startService(context, ACTION_DISCONNECT);
+        return startService(context, ACTION_DISCONNECT, null);
     }
 
     public static String checkConnectionStatus(final Context context) {
-        return startService(context, ACTION_CHECK_CONNECTION);
+        return startService(context, ACTION_CHECK_CONNECTION, null);
     }
 
     /**
@@ -169,11 +167,10 @@ public class MQTTServiceCommand {
      * @param qos QoS to use (0, 1 or 2)
      * @return request Id, to be used in receiver to track events associated to this request
      */
-    public static String publish(final Context context, final String topic, final String payload,
+    public static String publish(final Context context, final String topic, final byte[] payload,
                                  final int qos) {
-        return startService(context, ACTION_PUBLISH,
+        return startService(context, ACTION_PUBLISH, payload,
                 PARAM_TOPIC, topic,
-                PARAM_PAYLOAD, payload,
                 PARAM_QOS, Integer.toString(qos)
         );
     }
@@ -185,39 +182,18 @@ public class MQTTServiceCommand {
      * @param payload payload to publish
      * @return request Id, to be used in receiver to track events associated to this request
      */
-    public static String publish(final Context context, final String topic, final String payload) {
+    public static String publish(final Context context, final String topic, final byte[] payload) {
         return publish(context, topic, payload, 0);
-    }
-
-    /**
-     * Publish an object, which will be serialized into JSON, on a topic.
-     * @param context application context
-     * @param topic topic on which to publish
-     * @param object object to publish
-     * @param qos QoS to use (0, 1 or 2)
-     * @return request Id, to be used in receiver to track events associated to this request
-     */
-    public static String publish(final Context context, final String topic, final Object object,
-                                 final int qos) {
-        return publish(context, topic, new Gson().toJson(object), qos);
-    }
-
-    /**
-     * Publish an object on a topic with QoS 0.
-     * @param context application context
-     * @param topic topic on which to publish
-     * @param object object to publish
-     * @return request Id, to be used in receiver to track events associated to this request
-     */
-    public static String publish(final Context context, final String topic, final Object object) {
-        return publish(context, topic, object, 0);
     }
 
     public static String getBroadcastAction() {
         return NAMESPACE + BROADCAST_ACTION_SUFFIX;
     }
 
-    private static String startService(final Context context, final String action, String... params) {
+    private static String startService(final Context context,
+                                       final String action,
+                                       final byte[] payload,
+                                       String... params) {
         if (params != null && params.length > 0 && params.length % 2 != 0)
             throw new IllegalArgumentException("Parameters must be passed in the form: PARAM_NAME, paramValue");
 
@@ -232,6 +208,10 @@ public class MQTTServiceCommand {
 
         String uuid = UUID.randomUUID().toString();
         intent.putExtra(PARAM_REQUEST_ID, action + "/" + uuid);
+
+        if (payload != null) {
+            intent.putExtra(PARAM_PAYLOAD, payload);
+        }
 
         context.startService(intent);
 

@@ -10,7 +10,7 @@ A tiny wrapper around [Eclipse Paho MQTT Java library](https://github.com/iGeniu
 
 ## Setup
 ```groovy
-compile 'net.igenius:mqttservice:1.4.5'
+compile 'net.igenius:mqttservice:1.5'
 ```
 
 Before using the library, you have to initialize it. The ideal place to do that is in your [Application subclass](http://developer.android.com/reference/android/app/Application.html):
@@ -54,13 +54,13 @@ MQTTServiceCommand.connectAndSubscribe(final Context context,
                                        final boolean autoResubscribeOnReconnect,
                                        final String... topics)
 
-// publish a string payload to a topic
+// publish a payload to a topic, with a specific QoS
 MQTTServiceCommand.publish(final Context context, final String topic,
-                           final String payload, final int qos)
+                           final byte[] payload, final int qos)
 
-// publish an object to a topic. It will be automatically serialized to JSON
+// publish a payload to a topic, with QoS 0
 MQTTServiceCommand.publish(final Context context, final String topic,
-                           final Object object, final int qos)
+                           final byte[] payload)
 ```
 Explore the class for complete JavaDocs and all the available options.
 
@@ -96,7 +96,7 @@ public class MQTTReceiver extends MQTTServiceReceiver {
 
     @Override
     public void onMessageArrived(Context context, String topic,
-                                 String payload) {
+                                 byte[] payload) {
         // called when a new message arrives on any topic
     }
 
@@ -150,7 +150,7 @@ public class YourActivity extends AppCompatActivity {
 
         @Override
         public void onMessageArrived(Context context, String topic,
-                                     String payload) {
+                                     byte[] payload) {
             // called when a new message arrives on any topic
         }
 

@@ -80,6 +80,18 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         sendBroadcast(intent);
     }
 
+    private void broadcastPayload(String type, String requestId, byte[] payload, String topic) {
+        Intent intent = new Intent();
+
+        intent.setAction(getBroadcastAction());
+        intent.putExtra(PARAM_BROADCAST_TYPE, type);
+        intent.putExtra(PARAM_REQUEST_ID, requestId);
+        intent.putExtra(PARAM_PAYLOAD, payload);
+        intent.putExtra(PARAM_TOPIC, topic);
+
+        sendBroadcast(intent);
+    }
+
     private void broadcastConnectionStatus(String requestId) {
         Intent intent = new Intent();
 
@@ -159,7 +171,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
                         intent.getStringArrayExtra(PARAM_TOPICS));
 
             } else if (ACTION_PUBLISH.equals(action)) {
-                onPublish(requestId, getParameter(intent, PARAM_TOPIC), getParameter(intent, PARAM_PAYLOAD));
+                onPublish(requestId, getParameter(intent, PARAM_TOPIC), intent.getByteArrayExtra(PARAM_PAYLOAD));
 
             } else if (ACTION_CHECK_CONNECTION.equals(action)) {
                 broadcastConnectionStatus(requestId);
@@ -309,7 +321,7 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         }
     }
 
-    private void onPublish(final String requestId, final String topic, final String payload) {
+    private void onPublish(final String requestId, final String topic, final byte[] payload) {
         if (!clientIsConnected()) {
             broadcastException(BROADCAST_EXCEPTION, requestId,
                                new Exception("Can't publish to topic: " + topic + ", client not connected!"));
@@ -317,8 +329,8 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         }
 
         try {
-            MQTTServiceLogger.debug("onPublish", "Publishing to topic: " + topic + ", payload: " + payload);
-            MqttMessage message = new MqttMessage(payload.getBytes("UTF-8"));
+            MQTTServiceLogger.debug("onPublish", "Publishing to topic: " + topic + ", payload with size " + payload.length);
+            MqttMessage message = new MqttMessage(payload);
             message.setQos(0);
             mClient.publish(topic, message);
             MQTTServiceLogger.debug("onPublish", "Successfully published to topic: " + topic + ", payload: " + payload);
@@ -340,10 +352,8 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        broadcast(BROADCAST_MESSAGE_ARRIVED, UUID.randomUUID().toString(),
-                PARAM_TOPIC, topic,
-                PARAM_PAYLOAD, new String(message.getPayload())
-        );
+        broadcastPayload(BROADCAST_MESSAGE_ARRIVED, UUID.randomUUID().toString(),
+                message.getPayload(), topic);
     }
 
     @Override

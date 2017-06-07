@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import net.igenius.mqttservice.MQTTService;
@@ -30,7 +31,9 @@ public class MainActivity extends AppCompatActivity {
             request.addProperty("lang", "en");
             request.addProperty("request_uid", "testAndroid/" + new Date().getTime());
 
-            MQTTServiceCommand.publish(context, "/advisor/" + topic.split("/")[2], request);
+            byte[] payload = new Gson().toJson(request).getBytes();
+
+            MQTTServiceCommand.publish(context, "/advisor/topic", payload);
         }
 
         @Override
@@ -44,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onMessageArrived(Context context, String topic, String payload) {
-            Log.e(TAG, "New message on " + topic + ":  " + payload);
+        public void onMessageArrived(Context context, String topic, byte[] payload) {
+            Log.e(TAG, "New message on " + topic + ":  " + new String(payload));
         }
 
         @Override

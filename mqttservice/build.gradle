@@ -19,7 +19,7 @@ def projectLicenseUrl = "http://www.apache.org/licenses/LICENSE-2.0.txt"
 def projectKeywords = ['android', 'mqtt', 'service']
 def developerFullName = "iGenius Srl"
 group = projectGroup
-version = "1.4.5"
+version = "1.5"
 
 def sdkVersion = 25;
 def toolsVersion = "25.0.2";
@@ -30,7 +30,7 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion sdkVersion
-        versionCode 8
+        versionCode 9
         versionName version
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

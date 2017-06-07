@@ -50,7 +50,7 @@ public abstract class MQTTServiceReceiver extends WakefulBroadcastReceiver {
 
         } else if (BROADCAST_MESSAGE_ARRIVED.equals(broadcastType)) {
             onMessageArrived(context, intent.getStringExtra(PARAM_TOPIC),
-                             intent.getStringExtra(PARAM_PAYLOAD));
+                             intent.getByteArrayExtra(PARAM_PAYLOAD));
 
         } else if (BROADCAST_SUBSCRIPTION_SUCCESS.equals(broadcastType)) {
             onSubscriptionSuccessful(context, requestId, intent.getStringExtra(PARAM_TOPIC));
@@ -112,7 +112,7 @@ public abstract class MQTTServiceReceiver extends WakefulBroadcastReceiver {
 
     public abstract void onSubscriptionError(Context context, String requestId, String topic, Exception exception);
 
-    public abstract void onMessageArrived(Context context, String topic, String payload);
+    public abstract void onMessageArrived(Context context, String topic, byte[] payload);
 
     public abstract void onConnectionSuccessful(Context context, String requestId);
 
