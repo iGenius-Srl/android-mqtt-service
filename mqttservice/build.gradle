@@ -19,10 +19,10 @@ def projectLicenseUrl = "http://www.apache.org/licenses/LICENSE-2.0.txt"
 def projectKeywords = ['android', 'mqtt', 'service']
 def developerFullName = "iGenius Srl"
 group = projectGroup
-version = "1.5"
+version = "1.6"
 
-def sdkVersion = 25;
-def toolsVersion = "25.0.2";
+def sdkVersion = 27
+def toolsVersion = "27.0.3"
 
 android {
     compileSdkVersion sdkVersion
@@ -46,13 +46,13 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    testCompile 'junit:junit:4.12'
-    compile 'com.google.code.gson:gson:2.8.0'
-    compile 'com.android.support:support-v4:25.+'
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.google.code.gson:gson:2.8.1'
+    implementation 'com.android.support:support-v4:27.1.1'
     //compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
 }
 
