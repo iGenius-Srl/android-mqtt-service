@@ -379,4 +379,11 @@ public class MQTTService extends BackgroundService implements Runnable, MqttCall
         broadcastConnectionStatus(requestId);
         broadcast(BROADCAST_CONNECTION_SUCCESS, requestId);
     }
+
+    @Override
+    public void onDestroy() {
+        // Disconnect the connection when the service gets destroyed
+        onDisconnect("MQTTService@onDestroy");
+        super.onDestroy();
+    }
 }
