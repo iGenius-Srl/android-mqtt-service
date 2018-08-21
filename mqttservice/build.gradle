@@ -19,7 +19,7 @@ def projectLicenseUrl = "http://www.apache.org/licenses/LICENSE-2.0.txt"
 def projectKeywords = ['android', 'mqtt', 'service']
 def developerFullName = "iGenius Srl"
 group = projectGroup
-version = "1.6.5"
+version = "1.6.6"
 
 def sdkVersion = 27
 def toolsVersion = "27.0.3"
